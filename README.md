@@ -28,10 +28,10 @@ This microservice provides a simple API for incident.
 To run the service locally:
 
 ```
-uvicorn app.main:app --reload --port 8004
+uvicorn app.main:app --reload --port 8003
 ```
 
-The service will be available at `http://localhost:8004`.
+The service will be available at `http://localhost:8003`.
 
 ## API Endpoints
 
@@ -43,14 +43,14 @@ To build and run the Docker container:
 
 ```
 docker build -t incident-service .
-docker run -p 8004:8004 incident-service
+docker run -p 8003:8003 incident-service
 ```
 
-Make sure to expose port 8004 in your Dockerfile:
+Make sure to expose port 8003 in your Dockerfile:
 
 ```dockerfile
-EXPOSE 8004
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8004"]
+EXPOSE 8003
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8003"]
 ```
 
 ## Alembic
