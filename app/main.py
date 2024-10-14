@@ -4,11 +4,12 @@ from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 
 from .errors.errors import ApiError
+from .routers import incident
 
 app = FastAPI()
+app.include_router(incident.router)
 
 version = "1.0"
-
 
 @app.get("/incident/health")
 async def health():

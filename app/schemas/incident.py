@@ -1,4 +1,4 @@
-# incident.py
+# app/routers/incident.py
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
@@ -31,10 +31,6 @@ class IncidentResponse(BaseModel):
 class UserCompanyRequest(BaseModel):
     user_id: UUID
     company_id: UUID
-    
-class IncidentsResponse(BaseModel):
-    incidents: List[IncidentResponse]
-    
 class CreateIncidentRequest(BaseModel):
     user_id: UUID
     company_id: UUID
