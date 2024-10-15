@@ -11,7 +11,8 @@ app.include_router(incident.router)
 
 version = "1.0"
 
-@app.get("/incident/health")
+SERVICE_TYPE = os.environ.get('SERVICE_TYPE', 'main')
+@app.get(f"/command-incident-{SERVICE_TYPE}/health")
 async def health():
     return {"status": "OK Python"}
 
