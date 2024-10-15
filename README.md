@@ -35,7 +35,7 @@ The service will be available at `http://localhost:8004`.
 
 ## API Endpoints
 
-- `GET /user/health`: Health check endpoint
+- `GET /incident-command/health`: Health check endpoint
 
 ## Docker
 

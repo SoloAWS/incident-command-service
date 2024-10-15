@@ -15,7 +15,7 @@ import os
 import jwt
 
 SERVICE_TYPE = os.environ.get('SERVICE_TYPE', 'main')
-router = APIRouter(prefix="/command-incident-{SERVICE_TYPE}", tags=["Incident"])
+router = APIRouter(prefix="/incident-command-{SERVICE_TYPE}", tags=["Incident"])
 
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'secret_key')
 ALGORITHM = "HS256"
