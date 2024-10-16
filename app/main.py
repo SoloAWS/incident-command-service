@@ -5,11 +5,15 @@ from fastapi.exceptions import RequestValidationError
 
 from .errors.errors import ApiError
 from .routers import incident
+from .session import engine
+from .models.model import Base
 
 app = FastAPI()
 app.include_router(incident.router)
 
 version = "1.0"
+
+Base.metadata.create_all(bind=engine)
 
 SERVICE_TYPE = os.environ.get('SERVICE_TYPE', 'main')
 @app.get(f"/incident-command-{SERVICE_TYPE}/health")
