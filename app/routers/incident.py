@@ -65,9 +65,9 @@ async def create_incident(
     user_id: uuid.UUID = Form(...),
     company_id: uuid.UUID = Form(...),
     description: str = Form(...),
-    state: IncidentState = Form(IncidentState.OPEN),
-    channel: IncidentChannel = Form(IncidentChannel.MOBILE),
-    priority: IncidentPriority = Form(IncidentPriority.MEDIUM),
+    state: str = Form(IncidentState.OPEN.value),
+    channel: str = Form(IncidentChannel.MOBILE.value),
+    priority: str = Form(IncidentPriority.MEDIUM.value),
     file: Optional[UploadFile] = File(None),
     db: Session = Depends(get_db),
     #current_user: dict = Depends(get_current_user)
