@@ -1,15 +1,18 @@
 # app/routers/incident.py
-from fastapi import APIRouter, Depends, HTTPException, Header
+from fastapi import APIRouter, Depends, HTTPException, Header, Form, UploadFile, File
 from sqlalchemy.orm import Session
 from ..schemas.incident import (
     CreateIncidentRequest, 
     CreateIncidentResponse, 
     IncidentResponse,
-    UserCompanyRequest
+    UserCompanyRequest,
+    IncidentState, 
+    IncidentChannel,
+    IncidentPriority
 )
 from ..models.model import Incident
 from ..session import get_db
-from typing import List
+from typing import List, Optional
 import uuid
 import os
 import jwt
@@ -56,6 +59,40 @@ def create_incident(
     db.refresh(new_incident)
 
     return CreateIncidentResponse.model_validate(new_incident)
+
+@router.post("/user-incident", response_model=CreateIncidentResponse, status_code=201)
+async def create_incident(
+    user_id: uuid.UUID = Form(...),
+    company_id: uuid.UUID = Form(...),
+    description: str = Form(...),
+    state: IncidentState = Form(IncidentState.OPEN),
+    channel: IncidentChannel = Form(IncidentChannel.MOBILE),
+    priority: IncidentPriority = Form(IncidentPriority.MEDIUM),
+    file: Optional[UploadFile] = File(None),
+    db: Session = Depends(get_db),
+    #current_user: dict = Depends(get_current_user)
+):
+    new_incident = Incident(
+        id=uuid.uuid4(),
+        description=description,
+        state=state,
+        channel=channel,
+        priority=priority,
+        user_id=user_id,
+        company_id=company_id
+    )
+    
+    if file:
+        file_content = await file.read()
+        new_incident.file_data = file_content
+        new_incident.file_name = file.filename
+    
+    db.add(new_incident)
+    db.commit()
+    db.refresh(new_incident)
+
+    return CreateIncidentResponse.model_validate(new_incident)
+
 
 @router.post("/user-company", response_model=List[IncidentResponse])
 def get_user_company_incidents(
