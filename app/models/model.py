@@ -1,5 +1,5 @@
 # model.py
-from sqlalchemy import Column, String, Enum, DateTime
+from sqlalchemy import Column, String, Enum, DateTime, LargeBinary
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 from sqlalchemy.ext.declarative import declarative_base
@@ -19,3 +19,5 @@ class Incident(Base):
     user_id = Column(UUID(as_uuid=True), nullable=False)
     company_id = Column(UUID(as_uuid=True), nullable=False)
     manager_id = Column(UUID(as_uuid=True))
+    file_data = Column(LargeBinary, nullable=True)
+    file_name = Column(String, nullable=True)

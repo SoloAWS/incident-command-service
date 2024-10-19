@@ -45,7 +45,6 @@ def test_get_user_company_incidents(db_session: Session):
     user_id = uuid4()
     company_id = uuid4()
     
-    # Create some test incidents
     for _ in range(5):
         incident_data = {
             "user_id": str(user_id),
@@ -115,3 +114,36 @@ def test_get_user_company_incidents_wrong_user(db_session: Session):
     print(response)
     assert response.status_code == 403
     assert response.json()["detail"] == "Not authorized to access this data"
+
+def test_create_incident_without_file(db_session: Session):
+    user_id = uuid4()
+    company_id = uuid4()
+    
+    form_data = {
+        "user_id": str(user_id),
+        "company_id": str(company_id),
+        "description": "Test incident without file",
+        "state": IncidentState.OPEN.value,
+        "channel": IncidentChannel.MOBILE.value,
+        "priority": IncidentPriority.MEDIUM.value,
+    }
+    
+    response = client.post("/incident-command-main/user-incident", data=form_data)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["description"] == "Test incident without file"
+
+def test_create_incident_invalid_data(db_session: Session):
+    user_id = uuid4()
+    company_id = uuid4()
+    
+    form_data = {
+        "user_id": str(user_id),
+        "company_id": str(company_id),
+        "state": IncidentState.OPEN.value,
+        "channel": IncidentChannel.MOBILE.value,
+        "priority": IncidentPriority.MEDIUM.value,
+    }
+    
+    response = client.post("/incident-command-main/user-incident", data=form_data)
+    assert response.status_code == 400
