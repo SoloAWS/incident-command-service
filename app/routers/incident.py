@@ -72,12 +72,16 @@ async def create_incident(
     db: Session = Depends(get_db),
     #current_user: dict = Depends(get_current_user)
 ):
+    state_enum = parse_enum_string(state, IncidentState)
+    channel_enum = parse_enum_string(channel, IncidentChannel)
+    priority_enum = parse_enum_string(priority, IncidentPriority)
+    
     new_incident = Incident(
         id=uuid.uuid4(),
         description=description,
-        state=state,
-        channel=channel,
-        priority=priority,
+        state=state_enum.value,
+        channel=channel_enum.value,
+        priority=priority_enum.value,
         user_id=user_id,
         company_id=company_id
     )
@@ -86,12 +90,19 @@ async def create_incident(
         file_content = await file.read()
         new_incident.file_data = file_content
         new_incident.file_name = file.filename
-    
+        
     db.add(new_incident)
     db.commit()
     db.refresh(new_incident)
 
     return CreateIncidentResponse.model_validate(new_incident)
+
+def parse_enum_string(value: str, enum_class):
+    try:
+        enum_value = value.split('.')[-1].lower()
+        return enum_class[enum_value.upper()]
+    except (KeyError, ValueError):
+        raise HTTPException(status_code=400, detail=f"Invalid value for {enum_class.__name__}: {value}")
 
 
 @router.post("/user-company", response_model=List[IncidentResponse])
