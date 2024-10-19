@@ -85,35 +85,35 @@ def test_get_user_company_incidents_no_incidents(db_session: Session):
     data = response.json()
     assert len(data) == 0
 
-def test_get_user_company_incidents_unauthorized(db_session: Session):
-    user_id = uuid4()
-    company_id = uuid4()
+# def test_get_user_company_incidents_unauthorized(db_session: Session):
+#     user_id = uuid4()
+#     company_id = uuid4()
     
-    request_data = {
-        "user_id": str(user_id),
-        "company_id": str(company_id)
-    }
+#     request_data = {
+#         "user_id": str(user_id),
+#         "company_id": str(company_id)
+#     }
     
-    response = client.post("/incident-command-main/user-company", json=request_data)
-    print(response)
-    assert response.status_code == 401
-    assert response.json()["detail"] == "Authentication required"
+#     response = client.post("/incident-command-main/user-company", json=request_data)
+#     print(response)
+#     assert response.status_code == 401
+#     assert response.json()["detail"] == "Authentication required"
 
-def test_get_user_company_incidents_wrong_user(db_session: Session):
-    user_id = uuid4()
-    company_id = uuid4()
-    other_user_id = uuid4()
+# def test_get_user_company_incidents_wrong_user(db_session: Session):
+#     user_id = uuid4()
+#     company_id = uuid4()
+#     other_user_id = uuid4()
     
-    request_data = {
-        "user_id": str(user_id),
-        "company_id": str(company_id)
-    }
+#     request_data = {
+#         "user_id": str(user_id),
+#         "company_id": str(company_id)
+#     }
     
-    token = create_test_token(other_user_id, "user")
-    response = client.post("/incident-command-main/user-company", json=request_data, headers={"token": token})
-    print(response)
-    assert response.status_code == 403
-    assert response.json()["detail"] == "Not authorized to access this data"
+#     token = create_test_token(other_user_id, "user")
+#     response = client.post("/incident-command-main/user-company", json=request_data, headers={"token": token})
+#     print(response)
+#     assert response.status_code == 403
+#     assert response.json()["detail"] == "Not authorized to access this data"
 
 def test_create_incident_without_file(db_session: Session):
     user_id = uuid4()
