@@ -17,8 +17,7 @@ import uuid
 import os
 import jwt
 
-SERVICE_TYPE = os.environ.get('SERVICE_TYPE', 'main')
-router = APIRouter(prefix="/incident-command-{SERVICE_TYPE}", tags=["Incident"])
+router = APIRouter(prefix="/incident-command", tags=["Incident"])
 
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'secret_key')
 ALGORITHM = "HS256"
@@ -103,7 +102,6 @@ def parse_enum_string(value: str, enum_class):
         return enum_class[enum_value.upper()]
     except (KeyError, ValueError):
         raise HTTPException(status_code=400, detail=f"Invalid value for {enum_class.__name__}: {value}")
-
 
 @router.post("/user-company", response_model=List[IncidentResponse])
 def get_user_company_incidents(
