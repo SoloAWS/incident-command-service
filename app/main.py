@@ -13,11 +13,9 @@ app.include_router(incident.router)
 
 version = "1.0"
 
-SERVICE_TYPE = os.environ.get('SERVICE_TYPE', 'main')
-if SERVICE_TYPE=="main":
-    Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
-@app.get(f"/incident-command-{SERVICE_TYPE}/health")
+@app.get(f"/incident-command/health")
 async def health():
     return {"status": "OK Python"}
 
