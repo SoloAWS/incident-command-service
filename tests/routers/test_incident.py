@@ -35,7 +35,7 @@ def test_create_incident_as_user(db_session: Session):
     }
     
     token = create_test_token(user_id, "user")
-    response = client.post("/incident-command-main/", json=incident_data, headers={"token": token})
+    response = client.post("/incident-command/", json=incident_data, headers={"token": token})
     print(response)
     assert response.status_code == 200
     data = response.json()
@@ -55,7 +55,7 @@ def test_get_user_company_incidents(db_session: Session):
             "priority": IncidentPriority.MEDIUM.value
         }
         token = create_test_token(user_id, "user")
-        client.post("/incident-command-main/", json=incident_data, headers={"token": token})
+        client.post("/incident-command/", json=incident_data, headers={"token": token})
     
     request_data = {
         "user_id": str(user_id),
@@ -63,7 +63,7 @@ def test_get_user_company_incidents(db_session: Session):
     }
     
     token = create_test_token(user_id, "user")
-    response = client.post("/incident-command-main/user-company", json=request_data, headers={"token": token})
+    response = client.post("/incident-command/user-company", json=request_data, headers={"token": token})
     print(response)
     assert response.status_code == 200
     data = response.json()
@@ -79,41 +79,41 @@ def test_get_user_company_incidents_no_incidents(db_session: Session):
     }
     
     token = create_test_token(user_id, "user")
-    response = client.post("/incident-command-main/user-company", json=request_data, headers={"token": token})
+    response = client.post("/incident-command/user-company", json=request_data, headers={"token": token})
     print(response)
     assert response.status_code == 200
     data = response.json()
     assert len(data) == 0
 
-# def test_get_user_company_incidents_unauthorized(db_session: Session):
-#     user_id = uuid4()
-#     company_id = uuid4()
+def test_get_user_company_incidents_unauthorized(db_session: Session):
+    user_id = uuid4()
+    company_id = uuid4()
     
-#     request_data = {
-#         "user_id": str(user_id),
-#         "company_id": str(company_id)
-#     }
+    request_data = {
+        "user_id": str(user_id),
+        "company_id": str(company_id)
+    }
     
-#     response = client.post("/incident-command-main/user-company", json=request_data)
-#     print(response)
-#     assert response.status_code == 401
-#     assert response.json()["detail"] == "Authentication required"
+    response = client.post("/incident-command/user-company", json=request_data)
+    print(response)
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Authentication required"
 
-# def test_get_user_company_incidents_wrong_user(db_session: Session):
-#     user_id = uuid4()
-#     company_id = uuid4()
-#     other_user_id = uuid4()
+def test_get_user_company_incidents_wrong_user(db_session: Session):
+    user_id = uuid4()
+    company_id = uuid4()
+    other_user_id = uuid4()
     
-#     request_data = {
-#         "user_id": str(user_id),
-#         "company_id": str(company_id)
-#     }
+    request_data = {
+        "user_id": str(user_id),
+        "company_id": str(company_id)
+    }
     
-#     token = create_test_token(other_user_id, "user")
-#     response = client.post("/incident-command-main/user-company", json=request_data, headers={"token": token})
-#     print(response)
-#     assert response.status_code == 403
-#     assert response.json()["detail"] == "Not authorized to access this data"
+    token = create_test_token(other_user_id, "user")
+    response = client.post("/incident-command/user-company", json=request_data, headers={"token": token})
+    print(response)
+    assert response.status_code == 403
+    assert response.json()["detail"] == "Not authorized to access this data"
 
 def test_create_incident_without_file(db_session: Session):
     user_id = uuid4()
@@ -128,7 +128,8 @@ def test_create_incident_without_file(db_session: Session):
         "priority": IncidentPriority.MEDIUM.value,
     }
     
-    response = client.post("/incident-command-main/user-incident", data=form_data)
+    token = create_test_token(form_data['user_id'], "user")
+    response = client.post("/incident-command/user-incident", data=form_data, headers={"token": token})
     assert response.status_code == 201
     data = response.json()
     assert data["description"] == "Test incident without file"
@@ -145,5 +146,7 @@ def test_create_incident_invalid_data(db_session: Session):
         "priority": IncidentPriority.MEDIUM.value,
     }
     
-    response = client.post("/incident-command-main/user-incident", data=form_data)
+    token = create_test_token(form_data['user_id'], "user")
+    response = client.post("/incident-command/user-incident", data=form_data, headers={"token": token})
+
     assert response.status_code == 400
