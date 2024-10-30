@@ -101,7 +101,7 @@ async def create_incident(
     
     history_log = IncidentHistory(
         incident_id=new_incident.id,
-        description="Incidente creado por asesor."
+        description="Incidente creado por usuario."
     )
         
     db.add(new_incident)
