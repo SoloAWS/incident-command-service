@@ -10,7 +10,7 @@ from ..schemas.incident import (
     IncidentChannel,
     IncidentPriority
 )
-from ..models.model import Incident
+from ..models.model import Incident, IncidentHistory
 from ..session import get_db
 from typing import List, Optional
 import uuid
@@ -53,7 +53,13 @@ def create_incident(
     if current_user['user_type'] == 'manager':
         new_incident.manager_id = current_user['sub']
 
+    history_log = IncidentHistory(
+        incident_id=new_incident.id,
+        description="Incidente creado por asesor."
+    )
+
     db.add(new_incident)
+    db.add(history_log)
     db.commit()
     db.refresh(new_incident)
 
@@ -92,8 +98,14 @@ async def create_incident(
         file_content = await file.read()
         new_incident.file_data = file_content
         new_incident.file_name = file.filename
+    
+    history_log = IncidentHistory(
+        incident_id=new_incident.id,
+        description="Incidente creado por usuario."
+    )
         
     db.add(new_incident)
+    db.add(history_log)
     db.commit()
     db.refresh(new_incident)
 
