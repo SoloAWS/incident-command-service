@@ -22,10 +22,11 @@ router = APIRouter(prefix="/incident-command", tags=["Incident"])
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'secret_key')
 ALGORITHM = "HS256"
 
-def get_current_user(token: str = Header(None)):
-    if token is None:
+def get_current_user(authorization: str = Header(None)):
+    if authorization is None:
         return None
     try:
+        token = authorization.replace('Bearer ', '') if authorization.startswith('Bearer ') else authorization
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         return payload
     except jwt.PyJWTError:
