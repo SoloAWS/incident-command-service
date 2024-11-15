@@ -1,5 +1,7 @@
 # app/routers/incident.py
 from fastapi import APIRouter, Depends, HTTPException, Header, Form, UploadFile, File
+import httpx
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from ..schemas.incident import (
     CreateIncidentRequest, 
@@ -10,15 +12,22 @@ from ..schemas.incident import (
     IncidentChannel,
     IncidentPriority
 )
-from ..models.model import Incident, IncidentHistory
+from ..models.model import EmailIncidentRequest, Incident, IncidentHistory
 from ..session import get_db
 from typing import List, Optional
 import uuid
 import os
 import jwt
+import logging
+
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+
 
 router = APIRouter(prefix="/incident-command", tags=["Incident"])
 
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://localhost:8002/user")
 SECRET_KEY = os.environ.get('JWT_SECRET_KEY', 'secret_key')
 ALGORITHM = "HS256"
 
@@ -136,3 +145,92 @@ def get_user_company_incidents(
         Incident.company_id == data.company_id
     ).order_by(Incident.creation_date.desc()).limit(20).all()
     return incidents
+
+
+@router.post("/email", response_model=CreateIncidentResponse)
+async def create_email_incident(
+    incident: EmailIncidentRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Special endpoint for creating incidents from email processor.
+    No JWT required, but requires validation of email and company.
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            # First, find company by name
+            try:
+                company_response = await client.get(
+                    f"{USER_SERVICE_URL}/email/company",
+                    params={"name": incident.company_name}
+                )
+                if company_response.status_code == 404:
+                    # Try to get list of companies for this email to provide better error message
+                    companies_response = await client.get(
+                        f"{USER_SERVICE_URL}/email/companies",
+                        params={"email": incident.email}
+                    )
+                    if companies_response.status_code == 200:
+                        companies = companies_response.json()['companies']
+                        raise HTTPException(
+                            status_code=404,
+                            detail=f"Company '{incident.company_name}' not found. Available companies for your email: {', '.join(c['name'] for c in companies)}"
+                        )
+                    raise HTTPException(
+                        status_code=404,
+                        detail=f"Company '{incident.company_name}' not found"
+                    )
+                company_data = company_response.json()
+                
+                # Validate user belongs to company
+                validation_response = await client.get(
+                    f"{USER_SERVICE_URL}/email/validate",
+                    params={
+                        "email": incident.email,
+                        "company_id": company_data['id']
+                    }
+                )
+                if validation_response.status_code != 200:
+                    raise HTTPException(
+                        status_code=403,
+                        detail=f"Email {incident.email} not authorized for company {incident.company_name}"
+                    )
+                user_data = validation_response.json()
+                
+            except httpx.RequestError as e:
+                logger.error(f"Error contacting user service: {str(e)}")
+                raise HTTPException(status_code=503, detail="User service unavailable")
+            
+            # Create the incident
+            new_incident = Incident(
+                id=uuid.uuid4(),
+                description=incident.description,
+                state="open",
+                channel="email",
+                priority="medium",
+                user_id=user_data['id'],
+                company_id=company_data['id']
+            )
+            
+            history_log = IncidentHistory(
+                incident_id=new_incident.id,
+                description="Incident created via email."
+            )
+            
+            db.add(new_incident)
+            db.add(history_log)
+            db.commit()
+            db.refresh(new_incident)
+            
+            logger.info(f"Created email incident with ID: {new_incident.id}")
+            return CreateIncidentResponse.model_validate(new_incident)
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating email incident: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail="Internal server error creating incident"
+        )
